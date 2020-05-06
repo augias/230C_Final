@@ -1,0 +1,92 @@
+File Manifest for ICPSR 3804
+
+United States Department of Health and Human Services. Administration for
+Children and Families. Early Head Start Research and Evaluation (EHSRE)
+Study, 1996-2010: [United States]. ICPSR03804-v5. Ann Arbor, MI: Inter-
+university Consortium for Political and Social Research [distributor],
+2011-09-22. http://doi.org/10.3886/ICPSR03804.v5
+
+Details on the version history can be found below the file listings.
+
+
+Study-level Documentation
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    03804-descriptioncitation.pdf       -       -         -       2017-07-17  -
+
+    03804-related_literature.txt        -       -         -       daily       -
+
+    03804-manifest.txt                  -       -         -       daily       -
+
+
+DS0001 Early Head Start Research and Evaluation (EHSRE) Study, 1996-2010:
+[United States]
+
+    Filename                            Record  Record    Var.    Date        MD5
+                                        Length  Count     Count   Updated     Checksum
+
+    03804-0001-Codebook.pdf             -       -         -       2011-09-27  0b228f87257bdf095682b69909bec108
+
+    03804-0001-Data.dta                 -       2,977     1059    2011-09-27  043ef81f60e760ee400014020c221b34
+
+    03804-0001-Data.sav                 -       2,977     1059    2011-09-27  9965154b359103b48430a3f2bc3f0211
+
+    03804-0001-Data.stc                 -       2,977     1059    2011-09-27  3381bd6d54ede3e164f391cd02d7f506
+
+    03804-0001-Data.tsv                 -       2,977     1059    2011-09-27  ac720d16f7a8d5c4d16f94820aec2d0a
+
+    03804-0001-Data.txt                 3075    2,977     1059    2011-09-27  57b213c236953977e1ba38f8974ccc56
+
+    03804-0001-Program-fmt.sas          -       -         -       2011-09-27  84ad6e71beb369a74182660aa3d89701
+
+    03804-0001-Program-fmt_stmt.sas     -       -         -       2011-09-27  94970bf0f6640ff406f982a0666a8f59
+
+    03804-0001-Setup.dct                -       -         -       2011-09-27  4dec7c2cee2feb65734eedd09ce8e9fd
+
+    03804-0001-Setup.do                 -       -         -       2011-09-27  ce5a44115e603ec0bbd7ea68cb03647f
+
+    03804-0001-Setup.sas                -       -         -       2011-09-27  ef59c9818cd9b8ecd36809e6fe417116
+
+    03804-0001-Setup.sps                -       -         -       2011-09-27  b363323b246bec85b80bd1cb60376c76
+
+    03804-0001-Supplemental_syntax.do   -       -         -       2011-09-27  e1e3250c4d19926a1887610976e92f5c
+
+    03804-0001-User_guide-BirthtoThree.pdf -       -         -       2011-09-27  33a6d90752b762d7a0ceb3af3dede7d1
+
+    03804-0001-User_guide-Grade5.pdf    -       -         -       2011-09-27  26a7c8c015ab384eaf38251c4eff3cba
+
+    03804-0001-User_guide-PreK.pdf      -       -         -       2011-09-27  152c15c6d6a06326047bfb1d227c5297
+
+
+Version History
+
+2011-09-27 The SAS macro names were changed in the files "Program-fmt.sas"
+and "Program-fmt_stmt.sas".  Missing Value Labels for these variables were
+removed:  CMTHS, C5BMIZ, B5PEDSUP, B5PEDSUPE, B5EDSUPI.  The Variable List
+and Parent Interview Crosswalk were moved in the codebook and now appear
+starting on page 7.  2011-09-22 The data and documentation were completely
+updated.  Previously, the data contained information for the "0-3" phase
+and now contain data for all 3 phases: "0-3", "PreK," and "Grade 5."  The
+documentation was revised so that there is one User Guide per phase and one
+Codebook (with appendices) for all phases combined. An overview of the
+entire data collection is provided beginning on page 4 of each PDF.  2010-
+05-11 The PDF documentation has been updated. Specifically, parts of the
+codebook were edited for grammar and formatting. In the dataset, missing
+values were adjusted for five variables: POVRATIO, B0P_CDAT, P0_DATE,
+P1_DATE, and P2_DATE.  2008-06-18 The data files were revised, variable
+labels and value labels refined, and documentation updated. Specifically,
+the Explanation of Measures document was combined with the codebook
+reducing the number of study documents to 3.  2008-02-18 The data producer
+revised the data file, adding 155 variables and dropping 24 variables. The
+accompanying documentation files, including the Codebook and Explanation of
+Measures have been updated to reflect these changes. Stata data and setup
+files have been added to this collection.  2004-10-20 PDF documentation was
+updated further. Specifically, variable labels, descriptions, and
+derivation information were reworded. Also, an additional PDF document was
+added, entitled "Measures," describing the measures used in the study.
+2004-08-12 URLs in RELATED.PUBS field were updated.  2004-08-10 PDF
+documentation was updated. Specifically, variable labels, descriptions, and
+derivation information were reworded and some frequencies were added to the
+codebook.
