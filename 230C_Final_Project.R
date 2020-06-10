@@ -119,7 +119,7 @@ describeBy(filtered, group="PROGRAM", mat=FALSE, digits=3) #can also do this, bu
 kurtosis(filtered$B4PINCOM[which(filtered$PROGRAM == 0)], na.rm = TRUE) #Comparison group
 kurtosis(filtered$B4PINCOM[which(filtered$PROGRAM == 1)], na.rm = TRUE) #Treatment group
 
-check1 <- lm(B3P_PD~ B4PINCOM+PROGRAM, data=filtered)
+check1 <- lm(B3P_PD ~ B4PINCOM+PROGRAM, data=filtered)
 summary(check1)
 anova(check1)
 # 1. Calculate residuals and standardized residuals
@@ -150,7 +150,7 @@ plot(hsb1$locus, hsb1$Zresiduals, main="Zresiduals vs locus", xlab = "locus", yl
 abline(h = 0, col = "blue") #adds a horizontal reference line
 
 #Test correlaiotn of B4PINCOM and B3P_PD
-cor(filtered$B4PINCOM, filtered$B3P_PD)
+cor(filtered$B4PINCOM, filtered$B3P_PD, use = "complete.obs") #pearson correlatoin = -0.09076674
 
 #Test linearity
 library(ggplot2)
@@ -161,9 +161,10 @@ ggplot(filtered,
   geom_jitter()
 
 # Check independence of the covariate and treatment effect
+library(car)
 options(contrasts = c("contr.sum","contr.poly")) #run this code to get accurate type III SS
 check1 <- aov(B4PINCOM ~ PROGRAM, data=filtered)
-Anova(check1, type="III") # Note p-value is ...
+Anova(check1, type="III") # Note p-value is 0.54
 
 # Create clean dataset with variables of interest ####
 
