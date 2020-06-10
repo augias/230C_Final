@@ -12,8 +12,6 @@
 library(tidyverse)
 library(haven)
 
-## directory paths ####
-
 ## Dataset load ####
 
 ehs <- read.table(file = "EHS_delimited_ICPSR_03804-V5/03804-0001-Data.tsv", sep = '\t', header = TRUE)
@@ -33,7 +31,7 @@ count(ehs$HGCG)
 #ADULTS_G - number of adults in household 0=0, 1=1 2=2 3=3
 
 # Create subset dataframe ####
-filtered <- ehs %>% select(IDNUM, PROGRAM, B3P_PD, B4PINCOM, HGCG, CSEX, RACE, TEEN_MOM, ENGLISH, SUPPORT, ADULTS_G)
+filtered <- ehs %>% select(IDNUM, PROGRAM, B3P_PD, B1P_PD, B4PINCOM, HGCG, CSEX, RACE, TEEN_MOM, ENGLISH, SUPPORT, ADULTS_G)
 
 filtered <- filtered %>% mutate_all(funs(replace(., .<0, NA_real_))) #Turn any values below 0 into an NA value
 
@@ -53,7 +51,7 @@ str(filtered$PROGRAM) #Check to make sure your variable of choice became a facto
 
 filtered %>% group_by(PROGRAM) %>% filter(is.na(RACE)) %>% count() #This filtered subset shows missingness. can use to compare if theres an imbalance
 
-#Check independence:
+#Check independence ####
 # Between-group: e.g., same students appear in more than one IV level?
 # Within-group: e.g., are students nested?
 filtered %>% group_by(IDNUM) %>%
@@ -71,7 +69,7 @@ filtered %>% group_by(PROGRAM) %>%
 # T-Tests and chi square tests for baseline stats ####
 #Test B4PINCOM mean differences across program
 filtered %>% t.test(B4PINCOM ~ PROGRAM, data = ., var.equal = TRUE) 
-filtered %>% t.test(B3P_PD ~ PROGRAM, data = ., var.equal = TRUE) 
+filtered %>% t.test(B1P_PD ~ PROGRAM, data = ., var.equal = TRUE) 
 
 #Chi-squared tests for independence of CSEX, RACE, TEEN_MOM, ENGLISH, HGCG, SUPPORT, ADULTS_G
 
@@ -87,10 +85,10 @@ for (i in 1:length(chi)) {
 
 #ASSUMPTIONS CHECKS ####
 
-#Checks for normality of income distributions
+#Checks for normality of income distributions ####
 for (i in 0:1) {
 hist(filtered$B4PINCOM[filtered$PROGRAM==i], prob = TRUE)
-curve(dnorm(x, mean=mean(filtered$B4PINCOM[income$PROGRAM==i], na.rm = TRUE), sd=sd(filtered$B4PINCOM[filtered$PROGRAM==i], na.rm = TRUE)), add=TRUE) #adds normal curve
+curve(dnorm(x, mean=mean(filtered$B4PINCOM[filtered$PROGRAM==i], na.rm = TRUE), sd=sd(filtered$B4PINCOM[filtered$PROGRAM==i], na.rm = TRUE)), add=TRUE) #adds normal curve
 } #both charts for program group 0 and 1 look identical
 
 # Boxplots
@@ -102,13 +100,13 @@ boxplot(B4PINCOM~PROGRAM, # Tells R to plot the commute time variable by section
         ylab="Income", # Y-axis label 
         boxwex = 0.3)  # A scaling factor that changes the width of the boxplots
 
-# check for outliers using Z-scores by group (yardstick >|3| z-score)
+# check for outliers using Z-scores by group (yardstick >|3| z-score) ####
 library(dplyr)
 filtered <- filtered %>%
   group_by(PROGRAM) %>% 
   mutate(B4PINCOM_z = scale(B4PINCOM))
 
-# Check for skewness and kurtosis 
+# Check for skewness and kurtosis ####
 # Skew: skew >|1| = high, skew |1|-|.5| = moderate, skew <|.5| = symmetric
 # Kurtosis: DescribeBy displays "excess kurtosis" so 0 = normal, <0 = platykurtic, >0 = leptokurtic
 library(psych) #if needed, use install.packages("psych")
@@ -134,7 +132,8 @@ Zpredicted <- scale(predicted)
 filtered <- cbind(filtered, Zresiduals, Zpredicted)
 
 # 3. Plots!
-#Linearity and homoscedasticity using standardized residuals over standardized predicted value plots:
+#Linearity and homoscedasticity ####
+#using standardized residuals over standardized predicted value plots:
 hist(Zresiduals, breaks=30, prob = TRUE)
 curve(dnorm(x, mean = mean(Zresiduals), sd = sd(Zresiduals)), add = TRUE)
 plot(Zpredicted, Zresiduals, main="Zresiduals vs Zpredicted")
@@ -149,10 +148,10 @@ qqline(Zresiduals)
 plot(hsb1$locus, hsb1$Zresiduals, main="Zresiduals vs locus", xlab = "locus", ylab = "Standardized Residuals")
 abline(h = 0, col = "blue") #adds a horizontal reference line
 
-#Test correlaiotn of B4PINCOM and B3P_PD
-cor(filtered$B4PINCOM, filtered$B3P_PD, use = "complete.obs") #pearson correlatoin = -0.09076674
+#Test correlaiotn of B4PINCOM and B3P_PD ####
+  cor(filtered$B4PINCOM, filtered$B3P_PD, use = "complete.obs") #pearson correlatoin = -0.09076674
 
-#Test linearity
+#Test linearity ####
 library(ggplot2)
 ggplot(filtered, 
        aes(x=B4PINCOM, y=B3P_PD, color=PROGRAM, shape=PROGRAM))+
@@ -160,7 +159,7 @@ ggplot(filtered,
   geom_smooth(method=lm, fullrange=TRUE)+
   geom_jitter()
 
-# Check independence of the covariate and treatment effect
+# Independence of the covariate and treatment effect ####
 library(car)
 options(contrasts = c("contr.sum","contr.poly")) #run this code to get accurate type III SS
 check1 <- aov(B4PINCOM ~ PROGRAM, data=filtered)
