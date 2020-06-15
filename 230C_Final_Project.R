@@ -10,7 +10,6 @@
 ## libraries
 
 library(tidyverse)
-library(haven)
 
 ## Dataset load ####
 
@@ -21,7 +20,8 @@ count(ehs$HGCG)
 ## Covariate values ####
 #PROGRAM - 0 comparison and 1 treatment groups
 #B4PINCOM - PreK income per month
-#B3P_PD - Parenting stress index short form at 36 months
+#B3P_PD - Parenting stress index short form at 36 months (OUTCOME)
+#B1P_PD - Parenting stress index at 14 months (possible CV/pretest)
 #HGCG - 1: Completed Less than 12 yrs 2: Compreted 12 or GED 3: More than 12 yrs
 #CSEX - child gender F M U
 #RACE - Primary caregiver's race 1 white, 2 aa, 3, hisp, 4 other, -6 -5 missing
@@ -35,7 +35,7 @@ filtered <- ehs %>% select(IDNUM, PROGRAM, B3P_PD, B1P_PD, B4PINCOM, HGCG, CSEX,
 
 filtered <- filtered %>% mutate_all(funs(replace(., .<0, NA_real_))) #Turn any values below 0 into an NA value
 
-factors <- c("PROGRAM", "HGCG", "CSEX", "RACE", "TEEN_MOM", "ENGLISH", "SUPPORT", "ADULTS_G") #This char vecttor will help factorize these variables
+factors <- c("PROGRAM", "HGCG", "CSEX", "RACE", "TEEN_MOM", "ENGLISH", "SUPPORT") #This char vector will help factorize these variables
 
 make_factors <- function(df) {
   for (i in 1:length(factors)) {
@@ -75,7 +75,7 @@ filtered %>% t.test(B1P_PD ~ PROGRAM, data = ., var.equal = TRUE)
 
 chi <- c("CSEX", "RACE", "TEEN_MOM", "ENGLISH", "HGCG", "SUPPORT", "ADULTS_G")
 
-for (i in 1:length(chi)) {
+for (i in 1:length(chi)) { #loop through 'i' where i=1 at CSEX and i=7 at ADULTS_G
   col_name <- chi[i]
   tbl <- table(filtered[[col_name]], filtered$PROGRAM)
   writeLines(str_c("Chi suqared table and test for ", col_name))
@@ -83,11 +83,11 @@ for (i in 1:length(chi)) {
   print(chisq.test(tbl))
 }
 
-#ASSUMPTIONS CHECKS ####
+#ASSUMPTIONS CHECKS for INCOME ####
 
 #Checks for normality of income distributions ####
 for (i in 0:1) {
-hist(filtered$B4PINCOM[filtered$PROGRAM==i], prob = TRUE)
+hist(filtered$B4PINCOM[filtered$PROGRAM==i], prob = TRUE, main = paste("Histogram of income in PROGRAM ", i))
 curve(dnorm(x, mean=mean(filtered$B4PINCOM[filtered$PROGRAM==i], na.rm = TRUE), sd=sd(filtered$B4PINCOM[filtered$PROGRAM==i], na.rm = TRUE)), add=TRUE) #adds normal curve
 } #both charts for program group 0 and 1 look identical
 
@@ -104,7 +104,7 @@ boxplot(B4PINCOM~PROGRAM, # Tells R to plot the commute time variable by section
 library(dplyr)
 filtered <- filtered %>%
   group_by(PROGRAM) %>% 
-  mutate(B4PINCOM_z = scale(B4PINCOM))
+  mutate(B4PINCOM_z = scale(B4PINCOM)) %>% ungroup()
 
 # Check for skewness and kurtosis ####
 # Skew: skew >|1| = high, skew |1|-|.5| = moderate, skew <|.5| = symmetric
@@ -149,7 +149,7 @@ plot(hsb1$locus, hsb1$Zresiduals, main="Zresiduals vs locus", xlab = "locus", yl
 abline(h = 0, col = "blue") #adds a horizontal reference line
 
 #Test correlaiotn of B4PINCOM and B3P_PD ####
-  cor(filtered$B4PINCOM, filtered$B3P_PD, use = "complete.obs") #pearson correlatoin = -0.09076674
+cor(filtered$B4PINCOM, filtered$B3P_PD, use = "complete.obs") #pearson correlatoin = -0.09076674
 
 #Test linearity ####
 library(ggplot2)
@@ -163,26 +163,32 @@ ggplot(filtered,
 library(car)
 options(contrasts = c("contr.sum","contr.poly")) #run this code to get accurate type III SS
 check1 <- aov(B4PINCOM ~ PROGRAM, data=filtered)
-Anova(check1, type="III") # Note p-value is 0.54
+Anova(check1, type="III") # Note p-value is 0.54 so assumption that income is independent of assignment variable is reasonable.
 
-# Create clean dataset with variables of interest ####
+# Homogeneity of slopes ####
+# Note any non-significant p-value for the interaction term
+options(contrasts = c("contr.sum","contr.poly")) #run this code to get accurate type III SS
+ancova <- aov(B3P_PD ~ B4PINCOM*PROGRAM, data = filtered)
+Anova(ancova, type="III") #Interaction term is nonsignificant. p=0.38, so we assume slopes will be homogeneous
 
+#Assumption Checks with Factors ####
 
-ehs_clean <- ehs %>% select(IDNUM, PROGRAM, PROGTYPE, all_of(interest_outcomes))
+#Linearity
+library(ggpubr)
+covariates <- c("CSEX", "RACE", "TEEN_MOM", "ENGLISH", "HGCG", "SUPPORT", "ADULTS_G")
+for (i in 1:length(covariates)) { #loop through 'i' where i=1 at CSEX and i=7 at ADULTS_G
+  col_name <- covariates[i]
+print(ggscatter(
+  filtered, x = "B4PINCOM", y = "B3P_PD",
+  facet.by  = c(col_name, "PROGRAM"), 
+  short.panel.labs = FALSE
+)+
+  stat_smooth(method = "loess", span = 0.9))
+}
 
-#Compare missingness by groups:
-ehs_clean %>% group_by(PROGTYPE) %>% select("B5CB_AGR", "B5CB_APR", "B5CB_AXR", "B5CB_EXR", "B5CB_INR", "B5CB_RBR", "B5CB_SCR", "B5CB_SPR", "B5CB_TPR", "B5CB_WDR") %>% summarise_all(funs(sum(is.na(.)))) 
-#More cases missing in group 2, then group 3, then group 1.
+# Homogeneity of slopes
 
-ehs_clean %>% group_by(PROGRAM) %>% select("B5CB_AGR", "B5CB_APR", "B5CB_AXR", "B5CB_EXR", "B5CB_INR", "B5CB_RBR", "B5CB_SCR", "B5CB_SPR", "B5CB_TPR", "B5CB_WDR") %>% summarise_all(funs(sum(is.na(.)))) 
-#Even-ish split of missing cases: Comparison group NA = 687, treatment group NA = 687
-
-#Non missing sums for progtype within PROGRAM to check for even distributions of the three types.
-ehs_clean %>% group_by(PROGRAM) %>% select("PROGTYPE") %>% summarise_all(funs(sum(!is.na(.)))) 
-#1474 non-missing comparison, 1503 non-missing program
-
-ehs_clean %>% group_by(PROGTYPE) %>% summarise_all(funs(sum(!is.na(.))))
-#610 center based, 1368 home based, 999 mixed 
-
-ehs_clean %>% filter(!is.na(PROGTYPE)) %>% group_by(PROGTYPE) %>% count(PROGRAM)
-#Center based: Tr=305, Cont=305; Home-based: Tr=668, Cont=700; Mixed: Tr=501, Cont=498
+# Ancova ####
+# Dependent Variable: B3P_PD
+# Treatment IV: PROGRAM
+# Covariates B4PINCOM, HGCG, CSEX, RACE, TEEN_MOM, ENGLISH, SUPPORT, ADULTS_G
