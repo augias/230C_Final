@@ -16,6 +16,7 @@ library(car)
 library(ggpubr)
 library(effects)
 library(multcomp)
+library(apaTables)
 
 ## Dataset load ####
 
@@ -34,7 +35,7 @@ ehs <- read.table(file = "EHS_delimited_ICPSR_03804-V5/03804-0001-Data.tsv", sep
 #ADULTS_G - number of adults in household 0=0, 1=1 2=2 3=3
 
 # Create subset dataframe ####
-filtered <- ehs %>% dplyr::select(IDNUM, PROGRAM, B3P_PD, B1P_PD, B4PINCOM, HGCG, RACE, TEEN_MOM, ENGLISH, SUPPORT, ADULTS_G)
+filtered <- ehs %>% dplyr::select(IDNUM, PROGRAM, B3P_PD, B3P_CDSF, B0P_CDSF, B4PINCOM, HGCG, RACE, TEEN_MOM, ENGLISH, SUPPORT, ADULTS_G)
 
 filtered <- filtered %>% mutate_all(funs(replace(., .<0, NA_real_))) #Turn any values below 0 into an NA value
 
@@ -69,7 +70,7 @@ filtered %>% group_by(PROGRAM) %>%
   ungroup()
 #If the output shows 2 or more n-per_group, then the same student would be  in more than ine level. We're good
 
-# T-Tests and chi square tests for baseline stats ####
+# T-Tests and chi square tests for baseline stats
 #Test B4PINCOM mean differences across program
 filtered %>% t.test(B4PINCOM ~ PROGRAM, data = ., var.equal = TRUE) 
 filtered %>% t.test(B3P_PD ~ PROGRAM, data = ., var.equal = TRUE) 
@@ -88,7 +89,7 @@ for (i in 1:length(chi)) { #loop through 'i' where i=1 at CSEX and i=7 at ADULTS
 
 #ASSUMPTIONS CHECKS for INCOME ####
 
-#Checks for normality of income and B3P_PD distributions ####
+#Checks for normality of income and B3P_PD distributions 
 # Find and replace to switch between B4PINCOM and B3P_PD
 for (i in 0:1) {
 hist(filtered$B3P_PD[filtered$PROGRAM==i], prob = TRUE, main = paste("Histogram of income in PROGRAM ", i))
@@ -104,12 +105,12 @@ boxplot(B3P_PD~PROGRAM, # Tells R to plot the commute time variable by section n
         ylab="Income", # Y-axis label 
         boxwex = 0.3)  # A scaling factor that changes the width of the boxplots
 
-# check for outliers using Z-scores by group (yardstick >|3| z-score) ####
+# check for outliers using Z-scores by group (yardstick >|3| z-score) 
 filtered <- filtered %>%
   group_by(PROGRAM) %>% 
   mutate(B3P_PD_z = scale(B3P_PD)) %>% ungroup()
 
-# Check for skewness and kurtosis ####
+# Check for skewness and kurtosis 
 # Skew: skew >|1| = high, skew |1|-|.5| = moderate, skew <|.5| = symmetric
 # Kurtosis: DescribeBy displays "excess kurtosis" so 0 = normal, <0 = platykurtic, >0 = leptokurtic
 library(psych) #if needed, use install.packages("psych")
@@ -135,7 +136,7 @@ Zpredicted <- scale(predicted)
 filtered <- cbind(filtered, Zresiduals, Zpredicted)
 
 # 3. Plots!
-#Linearity and homoscedasticity ####
+#Linearity and homoscedasticity 
 #using standardized residuals over standardized predicted value plots:
 hist(Zresiduals, breaks=30, prob = TRUE)
 curve(dnorm(x, mean = mean(Zresiduals), sd = sd(Zresiduals)), add = TRUE)
@@ -148,10 +149,10 @@ qqnorm(Zresiduals,
   qqline(Zresiduals)
 
 
-#Test correlaiotn of B4PINCOM and B3P_PD ####
+#Test correlaiotn of B4PINCOM and B3P_PD 
 cor(filtered$B4PINCOM, filtered$B3P_PD, use = "complete.obs") #pearson correlation = -0.09076674
 
-#Test linearity ####
+#Test linearity 
 library(ggplot2)
 ggplot(filtered, 
        aes(x=B4PINCOM, y=B3P_PD, color=PROGRAM, shape=PROGRAM))+
@@ -159,20 +160,27 @@ ggplot(filtered,
   geom_smooth(method=lm, fullrange=TRUE)+
   geom_jitter()
 
-  # Independence of the covariate and treatment effect ####
+
+ggplot(filtered, 
+       aes(x=B0P_CDSF, y=B3P_CDSF, color=PROGRAM, shape=PROGRAM))+
+  geom_point()+
+  geom_smooth(method=lm, fullrange=TRUE)+
+  geom_jitter()
+
+  # Independence of the covariate and treatment effect 
 library(car)
 options(contrasts = c("contr.sum","contr.poly")) #run this code to get accurate type III SS
 check1 <- aov(B4PINCOM ~ PROGRAM, data=filtered)
 Anova(check1, type="III") # Note p-value is 0.54 so assumption that income is independent of assignment variable is reasonable.
 
-# Homogeneity of slopes ####
+# Homogeneity of slopes 
 # Note any non-significant p-value for the interaction term
 options(contrasts = c("contr.sum","contr.poly")) #run this code to get accurate type III SS
 ancova <- aov(B3P_PD ~ B4PINCOM*PROGRAM, data = filtered)
 Anova(ancova, type="III") #Interaction term is nonsignificant. p=0.38, so we assume slopes will be homogeneous
 
 
-#Assumption Checks with Factors ####
+#Assumption Checks for Factors ####
 
 #Linearity
 library(ggpubr)
@@ -188,13 +196,13 @@ for (i in 1:length(covariates)) { #loop through 'i' where i=1 at CSEX and i=7 at
 
 # Homogeneity of slopes
 options(contrasts = c("contr.sum","contr.poly")) #run this code to get accurate type III SS
-test <- aov(B3P_PD ~ B4PINCOM + RACE + TEEN_MOM + ENGLISH + HGCG + SUPPORT + ADULTS_G + B4PINCOM*PROGRAM + B4PINCOM*RACE + B4PINCOM*TEEN_MOM + B4PINCOM*ENGLISH + B4PINCOM*HGCG + B4PINCOM*SUPPORT + B4PINCOM*ADULTS_G, data = filtered)
+test <- aov(B3P_PD ~ B4PINCOM + B4PINCOM*PROGRAM + B4PINCOM*RACE + B4PINCOM*TEEN_MOM + B4PINCOM*ENGLISH + B4PINCOM*HGCG + B4PINCOM*SUPPORT + B4PINCOM*ADULTS_G, data = filtered)
 Anova(test, type="III") 
   # There were 0 significant interaction terms. The assumption is met.
 
 library(rstatix)
 filtered %>% anova_test(
-  B3P_PD ~ B4PINCOM + RACE + TEEN_MOM + ENGLISH + HGCG + SUPPORT + ADULTS_G + B4PINCOM*PROGRAM + B4PINCOM*RACE + B4PINCOM*TEEN_MOM + B4PINCOM*ENGLISH + B4PINCOM*HGCG + B4PINCOM*SUPPORT + B4PINCOM*ADULTS_G, type = 3
+  B3P_PD ~ B4PINCOM + PROGRAM + RACE + TEEN_MOM + ENGLISH + HGCG + SUPPORT + ADULTS_G + B4PINCOM*PROGRAM + B4PINCOM*RACE + B4PINCOM*TEEN_MOM + B4PINCOM*ENGLISH + B4PINCOM*HGCG + B4PINCOM*SUPPORT + B4PINCOM*ADULTS_G, type = 3
 )# There were 0 significant interaction terms. The assumption is met.
 
 
@@ -255,6 +263,9 @@ summary.lm(ancova2) #woah? this does splits?
 
 apa.aov.table(ancova2)
 
+adjustedMeans<-effect("HGCG", ancova2, se=TRUE)
+summary(adjustedMeans)
+
 # Adjusted means plots for omnibus significant groups
 omnibus_groups <- c("HGCG", "TEEN_MOM", "SUPPORT")
 for (i in 1:length(omnibus_groups)) {
@@ -265,7 +276,7 @@ for (i in 1:length(omnibus_groups)) {
 }
 
 # Ancova 3: Education Post-Hoc Contrasts ####
-#Educaiton assumptions regarding the covariate
+#Education assumptions regarding the covariate
 #Test linearity
 library(ggplot2)
 ggplot(filtered, 
@@ -331,6 +342,6 @@ d #d = 0.194981
 
 # True Post-Hocs ####
 library(stats)
-postHocs<-glht(ancova2, linfct = mcp(HGCG = "Tukey"))
-summary(postHocs)
+postHocs<-glht(ancova2, linfct = mcp(HGCG = "Tukey", TEEN_MOM = "Tukey", SUPPORT = "Tukey"))
+summary(postHocs, test = adjusted("bonferroni"))
 confint(postHocs)
